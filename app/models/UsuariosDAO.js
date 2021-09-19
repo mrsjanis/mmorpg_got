@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function UsuariosDAO(connection){
     this._connection = connection(); // _ indica que a variavel faz parte do contexto da função
 }
@@ -13,6 +15,10 @@ UsuariosDAO.prototype.inserirUsuario = function(dadosUsuario){
             - função de callback (erro, objeto pra manipular as informações na collection)
          */
         mongoclient.collection("usuarios", function(err, collection){
+            
+            var senhaCriptografada = crypto.createHash("md5").update(dadosUsuario.senha).digest("hex");     
+            dadosUsuario.senha = senhaCriptografada;  
+            
             collection.insert(dadosUsuario);
             mongoclient.close;
         });
@@ -30,6 +36,10 @@ UsuariosDAO.prototype.autenticar = function(dadosUsuario, req, res){
             - função de callback (erro, objeto pra manipular as informações na collection)
             */
         mongoclient.collection("usuarios", function(err, collection){
+
+            var senhaCriptografada = crypto.createHash("md5").update(dadosUsuario.senha).digest("hex");     
+            dadosUsuario.senha = senhaCriptografada; 
+            
             collection.find(dadosUsuario).toArray(function(err, result){
                 if(result[0] != undefined){ // se tiver algum registro
                     req.session.autorizado = true; // variavel de sessão autorizando o login
